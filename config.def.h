@@ -32,14 +32,15 @@ char mpd_cmd_prev[] = "mpc prev>/dev/null; s=`mpc current`; [ \"$s\" ] && echo $
  */
 struct config
 conf[] = {
-	/* Key                           Text                 Display func          Shell command */
-	{XF86XK_MonBrightnessUp,         "Brightness",        text_with_bar,        br_cmd},
-	{XF86XK_MonBrightnessDown,       "Brightness",        text_with_bar,        br_cmd},
-	{XF86XK_AudioLowerVolume,        "Volume",            text_with_bar,        vol_cmd_dec},
-	{XF86XK_AudioRaiseVolume,        "Volume",            text_with_bar,        vol_cmd_inc},
-	{XF86XK_AudioMute,               "Volume",            text_with_text,       "ossvol.sh -t"},
-	{XF86XK_AudioPlay,               "MPD",               text_with_text,       mpd_cmd_toggle},
-	{XF86XK_AudioNext,               "MPD",               text_with_text,       mpd_cmd_next},
-	{XF86XK_AudioPrev,               "MPD",               text_with_text,       mpd_cmd_prev},
+/*   Modifier  Key                           Text                 Display func          Shell command */
+    {0,        XF86XK_MonBrightnessUp,         "Brightness",        text_with_bar,        br_cmd},
+    {0,        XF86XK_MonBrightnessDown,       "Brightness",        text_with_bar,        br_cmd},
+    {0,        XF86XK_AudioLowerVolume,        "Volume",            text_with_bar,        vol_cmd_dec},
+    {0,        XF86XK_AudioRaiseVolume,        "Volume",            text_with_bar,        vol_cmd_inc},
+    {0,        XF86XK_AudioMute,               "Volume",            text_with_text,       "ossvol.sh -t"},
+    {0,        XF86XK_AudioPlay,               "MPD",               text_with_text,       mpd_cmd_toggle},
+    {0,        XF86XK_AudioNext,               "MPD",               text_with_text,       mpd_cmd_next},
+    {0,        XF86XK_AudioPrev,               "MPD",               text_with_text,       mpd_cmd_prev},
+    {Mod1Mask|ControlMask, XK_m,               "Message",           text_with_text,       "echo \"This is a test :3\""},
 };
 

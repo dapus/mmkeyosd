@@ -17,9 +17,11 @@
 #define err(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
 #define die(fmt, ...) do { fprintf(stderr, fmt, ##__VA_ARGS__); exit(1); } while(0)
 #define CENTER(A, B) (( (A)/2 ) - ( (B)/2 ))
+#define CLEANMASK(mask) (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 
 struct
 config {
+	unsigned int mod;
 	KeySym key;
 	char *text;
 	void (*disp)(struct config *, char *);
@@ -49,6 +51,7 @@ struct font fontsmall;
 XftFont *xfont;
 int fonth;
 Atom NetWMWindowOpacity;
+unsigned int numlockmask = 0;
 
 unsigned long fgcol;
 unsigned long bgcol;
@@ -137,12 +140,18 @@ text_with_bar(struct config *c, char *in) {
 }
 
 void
-grabkey(KeySym key) {
-	int modmask = 0;
+grabkey(unsigned int modmask, KeySym key) {
 	XGrabKey(dpy, XKeysymToKeycode(dpy, key), modmask, root, True,
 		GrabModeAsync, GrabModeAsync);
 	XGrabKey(dpy, XKeysymToKeycode(dpy, key), LockMask | modmask, root,
 		True, GrabModeAsync, GrabModeAsync);
+
+	if(numlockmask) {
+		XGrabKey(dpy, XKeysymToKeycode(dpy, key), modmask | numlockmask, root, True,
+			GrabModeAsync, GrabModeAsync);
+		XGrabKey(dpy, XKeysymToKeycode(dpy, key), LockMask | modmask | numlockmask, root,
+			True, GrabModeAsync, GrabModeAsync);
+	}
 };
 
 unsigned long
@@ -165,8 +174,9 @@ sigalrm(int i) {
 
 void
 setup() {
-	int i, wx, wy;
+	int i, j, wx, wy;
 	XSetWindowAttributes wattr;
+	XModifierKeymap *modmap;
 
 	XSetErrorHandler(handle_xerror);
 
@@ -187,8 +197,19 @@ setup() {
 			CopyFromParent, InputOutput, CopyFromParent,
 			CWOverrideRedirect | CWBackPixel | CWBorderPixel, &wattr);
 
+	/* Grab keys */
+	/* modifier stuff taken from evilwm */
+	modmap = XGetModifierMapping(dpy);
+	for (i = 0; i < 8; i++) {
+		for (j = 0; j < modmap->max_keypermod; j++) {
+			if (modmap->modifiermap[i * modmap->max_keypermod + j] ==
+			XKeysymToKeycode(dpy, XK_Num_Lock)) {
+				numlockmask = (1 << i);
+			}
+		}
+	}
 	for(i=0; i < LENGTH(conf); i++)
-		grabkey(conf[i].key);
+		grabkey(conf[i].mod, conf[i].key);
 
 	/* behöver inte denna va? */
 	XSelectInput(dpy, root, KeyPressMask | SubstructureNotifyMask);
@@ -234,7 +255,8 @@ run() {
 			//puts("\tkeypress!");
 			keysym = XKeycodeToKeysym(dpy, (KeyCode)ev.xkey.keycode, 0);
 			for(i=0; i < LENGTH(conf); i++) {
-				if(conf[i].key == keysym) {
+				if(conf[i].key == keysym &&
+						CLEANMASK(conf[i].mod) == CLEANMASK(ev.xkey.state)) {
 					//printf("%i\n", (int)keysym);
 					//puts(conf[i].cmd);
 					f = popen(conf[i].cmd, "r");
