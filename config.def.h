@@ -1,5 +1,6 @@
 
-char *fontstr = "-*-dejavu sans mono-medium-r-*-*-20-*-*-*-*-*-*-*";
+char *fontstrbig = "-*-dejavu sans mono-medium-r-*-*-20-*-*-*-*-*-*-*";
+char *fontstrsmall = "-*-dejavu sans mono-medium-r-*-*-13-*-*-*-*-*-*-*";
 char *fgcolor = "white";
 char *bgcolor = "black";
 int bw = 0; /* border width */

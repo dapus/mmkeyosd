@@ -26,6 +26,12 @@ config {
 	char *cmd;
 };
 
+struct
+font {
+	XftFont *xfont;
+	int h;
+};
+
 void text_with_bar(struct config *c, char *in);
 void text_with_text(struct config *c, char *in);
 
@@ -38,6 +44,8 @@ int screen;
 Visual *visual;
 Colormap cmap;
 GC gc;
+struct font fontbig;
+struct font fontsmall;
 XftFont *xfont;
 int fonth;
 Atom NetWMWindowOpacity;
@@ -55,18 +63,18 @@ handle_xerror(Display * display, XErrorEvent * e) {
 }
 
 void
-setup_font() {
-	if(!(xfont = XftFontOpenXlfd(dpy, screen, fontstr))) {
+setup_font(struct font *font, char *fontstr) {
+	if(!(font->xfont = XftFontOpenXlfd(dpy, screen, fontstr))) {
 		err("WARNING: Could not setup font: '%s'. Falling back to 'fixed'\n", fontstr);
-		if(!(xfont = XftFontOpenXlfd(dpy, screen, "fixed")))
+		if(!(font->xfont = XftFontOpenXlfd(dpy, screen, "fixed")))
 			die("ERROR: Could not setup font\n");
 	}
 
-	fonth = xfont->ascent + xfont->descent;
+	font->h = font->xfont->ascent + font->xfont->descent;
 }
 
 void
-draw_text(char *str, int x, int y) {
+draw_text(struct font *font, char *str, int x, int y) {
 	XftColor color;
 	XftDraw *draw;
 
@@ -79,14 +87,14 @@ draw_text(char *str, int x, int y) {
 	XftColorAllocValue(dpy, visual, cmap, &color.color, &color);
 	draw = XftDrawCreate(dpy, win, visual, cmap);
 
-	XftDrawStringUtf8(draw, &color, xfont, x, y, (XftChar8 *)str, strlen(str));
+	XftDrawStringUtf8(draw, &color, font->xfont, x, y, (XftChar8 *)str, strlen(str));
 }
 
 int
-text_width(char *str) {
+text_width(struct font *font, char *str) {
 	XGlyphInfo ext;
 
-	XftTextExtentsUtf8(dpy, xfont, (XftChar8 *)str, strlen(str), &ext);
+	XftTextExtentsUtf8(dpy, font->xfont, (XftChar8 *)str, strlen(str), &ext);
 	return ext.xOff;
 }
 
@@ -97,8 +105,9 @@ text_with_text(struct config *c, char *in) {
 	XFillRectangle(dpy, win, gc, 0, 0, ww, wh);
 
 	XSetForeground(dpy, gc, fgcol);
-	draw_text(c->text, CENTER(ww, text_width(c->text)), CENTER(wh/2, fonth)+fonth);
-	draw_text(in, CENTER(ww, text_width(in)), (wh/2)+fonth);
+	draw_text(&fontbig, c->text, CENTER(ww, text_width(&fontbig, c->text)),
+			CENTER(wh/2, fontbig.h)+fontbig.h);
+	draw_text(&fontsmall, in, CENTER(ww, text_width(&fontsmall, in)), (wh/2)+fontsmall.h);
 
 	XSync(dpy, False);
 }
@@ -112,7 +121,8 @@ text_with_bar(struct config *c, char *in) {
 	XFillRectangle(dpy, win, gc, 0, 0, ww, wh);
 
 	XSetForeground(dpy, gc, fgcol);
-	draw_text(c->text, CENTER(ww, text_width(c->text)), CENTER(wh/2, fonth)+fonth);
+	draw_text(&fontbig, c->text, CENTER(ww, text_width(&fontbig, c->text)),
+			CENTER(wh/2, fontbig.h)+fontbig.h);
 //	printf("font height: %i\n", fonth);
 
 	/* border */
@@ -183,7 +193,8 @@ setup() {
 	/* behöver inte denna va? */
 	XSelectInput(dpy, root, KeyPressMask | SubstructureNotifyMask);
 
-	setup_font();
+	setup_font(&fontbig, fontstrbig);
+	setup_font(&fontsmall, fontstrsmall);
 
 	fgcol = getcolor(fgcolor);
 	bgcol = getcolor(bgcolor);
