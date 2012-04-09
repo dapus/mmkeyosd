@@ -8,6 +8,7 @@
 
 #include <X11/X.h>
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
 #include <X11/XF86keysym.h>
 #include <X11/Xft/Xft.h>
 
@@ -39,6 +40,7 @@ Colormap cmap;
 GC gc;
 XftFont *xfont;
 int fonth;
+Atom NetWMWindowOpacity;
 
 unsigned long fgcol;
 unsigned long bgcol;
@@ -185,6 +187,13 @@ setup() {
 
 	fgcol = getcolor(fgcolor);
 	bgcol = getcolor(bgcolor);
+
+	NetWMWindowOpacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
+	if(opacity > 1.0 || opacity < 0.0)
+		opacity = 0.0;
+	unsigned long real_opacity[] = { opacity * 0xffffffff };
+	XChangeProperty(dpy, win, NetWMWindowOpacity, XA_CARDINAL, 32,
+			PropModeReplace, (unsigned char *)real_opacity, 1);
 
 	signal(SIGALRM, sigalrm);
 }

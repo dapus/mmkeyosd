@@ -7,6 +7,7 @@ int ww = 300;
 int wh = 150;
 int barw = 100;
 int barh = 15;
+float opacity = 0.7; /* window opacity */
 
 char br_cmd[] = "\
 BRFILE=/sys/class/backlight/acpi_video0/brightness\n\
