@@ -19,6 +19,9 @@ echo | awk \"END{print $BR/$BRMAX*100}\"";
 char vol_cmd_dec[] = "ossvol.sh -2 >/dev/null; ossvol.sh -v | awk \"END{print \\$0/25*100}\"";
 char vol_cmd_inc[] = "ossvol.sh +2 >/dev/null; ossvol.sh -v | awk \"END{print \\$0/25*100}\"";
 char vol_cmd_mute[] = "ossvol.sh -t";
+char mpd_cmd_toggle[] = "mpc toggle | sed -n -e 's/^\\[\\(.*\\)\\].*/\\1/p' | tr '[=p=]' P";
+char mpd_cmd_next[] = "mpc next>/dev/null; s=`mpc current`; [ \"$s\" ] && echo $s || echo Nothing to Play";
+char mpd_cmd_prev[] = "mpc prev>/dev/null; s=`mpc current`; [ \"$s\" ] && echo $s || echo Nothing to Play";
 
 struct config
 conf[] = {
@@ -27,5 +30,8 @@ conf[] = {
 	{XF86XK_AudioLowerVolume,        "Volume",            text_with_bar,        vol_cmd_dec},
 	{XF86XK_AudioRaiseVolume,        "Volume",            text_with_bar,        vol_cmd_inc},
 	{XF86XK_AudioMute,               "Volume",            text_with_text,       "ossvol.sh -t"},
+	{XF86XK_AudioPlay,               "MPD",               text_with_text,       mpd_cmd_toggle},
+	{XF86XK_AudioNext,               "MPD",               text_with_text,       mpd_cmd_next},
+	{XF86XK_AudioPrev,               "MPD",               text_with_text,       mpd_cmd_prev},
 };
 
