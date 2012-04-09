@@ -17,8 +17,8 @@ BRMAX=`cat $BRMAXFILE`\n\
 BR=`cat $BRFILE`\n\
 echo | awk \"END{print $BR/$BRMAX*100}\"";
 
-char vol_cmd_dec[] = "ossvol.sh -2 >/dev/null; ossvol.sh -v | awk \"END{print \\$0/25*100}\"";
-char vol_cmd_inc[] = "ossvol.sh +2 >/dev/null; ossvol.sh -v | awk \"END{print \\$0/25*100}\"";
+char vol_cmd_dec[] = "ossvol.sh -2 | awk \"END{print \\$0/25*100}\"";
+char vol_cmd_inc[] = "ossvol.sh +2 | awk \"END{print \\$0/25*100}\"";
 char vol_cmd_mute[] = "ossvol.sh -t";
 char mpd_cmd_toggle[] = "mpc toggle | sed -n -e 's/^\\[\\(.*\\)\\].*/\\1/p' | tr '[=p=]' P";
 char mpd_cmd_next[] = "mpc next>/dev/null; s=`mpc current`; [ \"$s\" ] && echo $s || echo Nothing to Play";
