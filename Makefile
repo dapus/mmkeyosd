@@ -7,12 +7,6 @@ CFLAGS=-g -Wall `pkg-config --cflags xft`
 OBJ=mmkeyosd.o
 LIBS=-lX11 `pkg-config --libs xft`
 
-${OBJ}: config.h config.mk
-
-config.h:
-	@echo creating $@ from config.def.h
-	@cp config.def.h $@
-
 all: mmkeyosd
 
 mmkeyosd: $(OBJ)
@@ -22,6 +16,12 @@ mmkeyosd: $(OBJ)
 %.o: %.c
 	@echo CC $<
 	@$(CC) $(CFLAGS) -c $< -o $@
+
+${OBJ}: config.h config.mk
+
+config.h:
+	@echo creating $@ from config.def.h
+	@cp config.def.h $@
 
 install: mmkeyosd
 	@echo installing to $(DESTDIR)$(PREFIX)/bin...
