@@ -1,0 +1,8 @@
+mmkeyosd
+========
+
+mmkeyosd means Multimedia key OSD. It allows you
+to use your multimedia keys and displays an OSD.
+
+It's configured through its source (config.h file).
+
