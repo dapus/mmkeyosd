@@ -52,6 +52,7 @@ XftFont *xfont;
 int fonth;
 Atom NetWMWindowOpacity;
 unsigned int numlockmask = 0;
+int wx, wy, sw, sh;
 
 unsigned long fgcol;
 unsigned long bgcol;
@@ -101,30 +102,47 @@ text_width(struct font *font, char *str) {
 	return ext.xOff;
 }
 
+#define MAX(A, B) ((A) > (B) ? (A) : (B))
+
 void 
 text_with_text(struct config *c, char *in) {
+	int nww, tws, twb;
+
+	tws = text_width(&fontsmall, in);
+	twb = text_width(&fontbig, c->text);
+	nww = MAX(ww, MAX(tws, twb) + 20);
+
+	XMoveResizeWindow(dpy, win, CENTER(sw, nww), wy, nww, wh);
+
 	/* Clear window */
 	XSetForeground(dpy, gc, bgcol);
-	XFillRectangle(dpy, win, gc, 0, 0, ww, wh);
+	XFillRectangle(dpy, win, gc, 0, 0, nww, wh);
 
 	XSetForeground(dpy, gc, fgcol);
-	draw_text(&fontbig, c->text, CENTER(ww, text_width(&fontbig, c->text)),
+	draw_text(&fontbig, c->text, CENTER(nww, text_width(&fontbig, c->text)),
 			CENTER(wh/2, fontbig.h)+fontbig.h);
-	draw_text(&fontsmall, in, CENTER(ww, text_width(&fontsmall, in)), (wh/2)+fontsmall.h);
+	draw_text(&fontsmall, in, CENTER(nww, text_width(&fontsmall, in)), (wh/2)+fontsmall.h);
 
 	XSync(dpy, False);
 }
 
 void 
 text_with_bar(struct config *c, char *in) {
-	XRectangle r = { CENTER(ww, barw), /*CENTER(wh/2, barh)+*/(wh/2), barw, barh };
+	int nww, twb;
+
+	twb = text_width(&fontbig, c->text);
+	nww = MAX(ww, twb + 30);
+
+	XMoveResizeWindow(dpy, win, CENTER(sw, nww), wy, nww, wh);
+
+	XRectangle r = { CENTER(nww, barw), /*CENTER(wh/2, barh)+*/(wh/2), barw, barh };
 
 	/* Clear window */
 	XSetForeground(dpy, gc, bgcol);
-	XFillRectangle(dpy, win, gc, 0, 0, ww, wh);
+	XFillRectangle(dpy, win, gc, 0, 0, nww, wh);
 
 	XSetForeground(dpy, gc, fgcol);
-	draw_text(&fontbig, c->text, CENTER(ww, text_width(&fontbig, c->text)),
+	draw_text(&fontbig, c->text, CENTER(nww, text_width(&fontbig, c->text)),
 			CENTER(wh/2, fontbig.h)+fontbig.h);
 //	printf("font height: %i\n", fonth);
 
@@ -174,7 +192,8 @@ sigalrm(int i) {
 
 void
 setup() {
-	int i, j, wx, wy;
+	int i, j;
+
 	XSetWindowAttributes wattr;
 	XModifierKeymap *modmap;
 
@@ -187,8 +206,10 @@ setup() {
 	cmap = DefaultColormap(dpy, screen);
 	gc = DefaultGC(dpy, screen);
 
-	wx = CENTER(DisplayWidth(dpy, screen), ww);
-	wy = CENTER(DisplayHeight(dpy, screen), wh);
+	sw = DisplayWidth(dpy, screen);
+	sh = DisplayHeight(dpy, screen);
+	wx = CENTER(sw, ww);
+	wy = CENTER(sh, wh);
 
 	wattr.override_redirect = True;
 	wattr.background_pixel = bgcol; 
