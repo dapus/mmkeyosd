@@ -3,13 +3,16 @@ char *fontstrbig = "-*-dejavu sans mono-medium-r-*-*-20-*-*-*-*-*-*-*";
 char *fontstrsmall = "-*-dejavu sans mono-medium-r-*-*-13-*-*-*-*-*-*-*";
 char *fgcolor = "white";
 char *bgcolor = "black";
-int bw = 0; /* border width */
-int ww = 300;
-int wh = 150;
-int barw = 100;
-int barh = 15;
-float opacity = 0.7; /* window opacity */
+int bw = 0;             /* border width    */
+int ww = 300;           /* window width    */
+int wh = 150;           /* window height   */
+int barw = 150;         /* bar width       */
+int barh = 15;          /* bar height      */
+float opacity = 0.7;    /* window opacity  */
 
+/* this script doesn't actually change
+ * brightness (because my hardware does
+ * this for me). */
 char br_cmd[] = "\
 BRFILE=/sys/class/backlight/acpi_video0/brightness\n\
 BRMAXFILE=/sys/class/backlight/acpi_video0/max_brightness\n\
