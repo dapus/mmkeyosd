@@ -10,6 +10,7 @@ int wh = 150;           /* window height   */
 int barw = 150;         /* bar width       */
 int barh = 15;          /* bar height      */
 float opacity = 0.8;    /* window opacity  */
+int wtimeout = 2000;    /* window time out in milliseconds */
 
 /* this script doesn't actually change
  * brightness (because my hardware does

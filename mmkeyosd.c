@@ -263,7 +263,8 @@ start_timer() {
 	struct itimerval t;
 
 	memset(&t, 0, sizeof t);
-	t.it_value.tv_sec = 2;
+	t.it_value.tv_sec = wtimeout/1000;
+	t.it_value.tv_usec = (wtimeout%1000)*1000;
 	if(setitimer(ITIMER_REAL, &t, 0) == -1)
 		die("Could not set timer: %s\n", strerror(errno));
 }
