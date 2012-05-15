@@ -6,3 +6,7 @@ to use your multimedia keys and displays an OSD.
 
 It's configured through its source (config.h file).
 
+Thanks to the authors of:
+dwm
+yeahconsole
+
