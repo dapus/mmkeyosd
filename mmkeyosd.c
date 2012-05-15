@@ -7,12 +7,14 @@
 #include <sys/time.h>
 #include <poll.h>
 #include <sys/wait.h>
+#include <sys/time.h>
 
-#include <X11/X.h>
+#include <X11/Xlib.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/XF86keysym.h>
 #include <X11/Xft/Xft.h>
+#include <X11/Xproto.h>
 
 
 #define LENGTH(A) (sizeof(A) / sizeof(A[0]))
@@ -65,11 +67,26 @@ Bool is_mapped = False;
 int pid = -1;
 int cmdst = 0;
 
+int (*xerrorxlib)(Display *, XErrorEvent *);
+int
+handle_xerror(Display *dpy, XErrorEvent *ee) {
+	if(ee->error_code == BadWindow)
+			return 0;
+	else if(ee->request_code == X_GrabKey && ee->error_code == BadAccess)
+		err("WARNING: Failed to grab key\n");
+	else {
+		err("fatal error: request code=%d, error code=%d\n",
+						ee->request_code, ee->error_code);
+		return xerrorxlib(dpy, ee); /* may call exit */
+	}
+	return 0;
+}
+/*
 int
 handle_xerror(Display * display, XErrorEvent * e) {
 	fprintf(stderr, "%d  XError caught\n", e->error_code);
 	return 0;
-}
+}*/
 
 void
 setup_font(struct font *font, char *fontstr) {
@@ -103,10 +120,10 @@ void
 text_with_text(struct config *c, char *in, int error) {
 	int nww, tws, twb;
 
+	/* Calculate window size */
 	tws = text_width(&fontsmall, in);
 	twb = text_width(&fontbig, c->text);
 	nww = MAX(ww, MAX(tws, twb) + 20);
-
 	XMoveResizeWindow(dpy, win, CENTER(sw, nww), wy, nww, wh);
 
 	/* Clear window */
@@ -116,8 +133,6 @@ text_with_text(struct config *c, char *in, int error) {
 	draw_text(&fontbig, &fgcol, c->text, CENTER(nww, text_width(&fontbig, c->text)),
 			CENTER(wh/2, fontbig.h)+fontbig.h);
 	draw_text(&fontsmall, error ? &errcol : &fgcol, in, CENTER(nww, text_width(&fontsmall, in)), (wh/2)+fontsmall.h);
-
-	XSync(dpy, False);
 }
 
 void 
@@ -130,9 +145,9 @@ text_with_bar(struct config *c, char *in, int error) {
 		return;
 	}
 
+	/* Calculate window size */
 	twb = text_width(&fontbig, c->text);
 	nww = MAX(ww, twb + 30);
-
 	XMoveResizeWindow(dpy, win, CENTER(sw, nww), wy, nww, wh);
 
 	XRectangle r = { CENTER(nww, barw), (wh/2), barw, barh };
@@ -151,8 +166,6 @@ text_with_bar(struct config *c, char *in, int error) {
 	/* and bar */
 	r.width = (float)atoi(in)/100.0*(float)barw;
 	XFillRectangles(dpy, win, gc, &r, 1);
-
-	XSync(dpy, False);
 }
 
 void
@@ -203,7 +216,7 @@ setup() {
 	XSetWindowAttributes wattr;
 	XModifierKeymap *modmap;
 
-	XSetErrorHandler(handle_xerror);
+	xerrorxlib = XSetErrorHandler(handle_xerror);
 
 	dpy = XOpenDisplay(NULL);
 	root = DefaultRootWindow(dpy);
@@ -355,6 +368,7 @@ run() {
 	char errbuf[256] = {"ERROR: "};
 	int i;
 	char *errmsg = NULL;
+	struct timeval t1, t2;
 
 	XSync(dpy, False);
 	while(!XNextEvent(dpy, &ev)) {
@@ -363,20 +377,6 @@ run() {
 			for(i=0; i < LENGTH(conf); i++) {
 				if(conf[i].key == keysym &&
 						CLEANMASK(conf[i].mod) == CLEANMASK(ev.xkey.state)) {
-
-					readcmd(conf[i].cmd, buf, sizeof buf, errbuf+7/*skip the 'ERROR: ' part of the buffer */, sizeof(errbuf)-7);
-
-					if(buf[strlen(buf)-1] == '\n')
-						buf[strlen(buf)-1] = '\0';
-					if(errbuf[strlen(errbuf)-1] == '\n')
-						errbuf[strlen(errbuf)-1] = '\0';
-
-					if(strlen(buf))
-						errmsg = NULL;
-					else if(strlen(errbuf+7))
-						errmsg = errbuf;
-					else
-						errmsg = "ERROR: Command failed";
 
 					if(!is_mapped) {
 						XMapRaised(dpy, win);
@@ -391,8 +391,29 @@ run() {
 						}
 						is_mapped = True;
 					}
+					/* gettimeofday(&t1, NULL); */
+					readcmd(conf[i].cmd, buf, sizeof buf,
+							errbuf+7/*skip the 'ERROR: ' part of the buffer */, sizeof(errbuf)-7);
+					/*
+					gettimeofday(&t2, NULL);
+					printf("cmd finished after %li ms\n", ((t2.tv_sec-t1.tv_sec)*1000) + ((t2.tv_usec-t1.tv_usec)/1000));
+					*/
+
+					if(buf[strlen(buf)-1] == '\n')
+						buf[strlen(buf)-1] = '\0';
+					if(errbuf[strlen(errbuf)-1] == '\n')
+						errbuf[strlen(errbuf)-1] = '\0';
+
+					if(strlen(buf))
+						errmsg = NULL;
+					else if(strlen(errbuf+7))
+						errmsg = errbuf;
+					else
+						errmsg = "ERROR: Command failed";
+
 					start_timer();
 					conf[i].disp(&conf[i], errmsg ? errmsg : buf, errmsg ? True : False);
+					XSync(dpy, False);
 				}
 			}
 		}
