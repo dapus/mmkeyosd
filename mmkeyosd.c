@@ -15,6 +15,7 @@
 #include <X11/XF86keysym.h>
 #include <X11/Xft/Xft.h>
 #include <X11/Xproto.h>
+#include <X11/XKBlib.h>
 
 
 #define LENGTH(A) (sizeof(A) / sizeof(A[0]))
@@ -370,7 +371,7 @@ run() {
 	XSync(dpy, False);
 	while(!XNextEvent(dpy, &ev)) {
 		if(ev.type == KeyPress) {
-			keysym = XKeycodeToKeysym(dpy, (KeyCode)ev.xkey.keycode, 0);
+			keysym = XkbKeycodeToKeysym(dpy, (KeyCode)ev.xkey.keycode, 0, 0);
 			for(i=0; i < LENGTH(conf); i++) {
 				if(conf[i].key == keysym &&
 						CLEANMASK(conf[i].mod) == CLEANMASK(ev.xkey.state)) {
