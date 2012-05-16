@@ -89,7 +89,7 @@ handle_xerror(Display * display, XErrorEvent * e) {
 
 void
 setup_font(struct font *font, char *fontstr) {
-	if(!(font->xfont = XftFontOpenXlfd(dpy, screen, fontstr))) {
+	if(!(font->xfont = XftFontOpenName(dpy, screen, fontstr))) {
 		err("WARNING: Could not setup font: '%s'. Falling back to 'fixed'\n", fontstr);
 		if(!(font->xfont = XftFontOpenXlfd(dpy, screen, "fixed")))
 			die("ERROR: Could not setup font\n");
