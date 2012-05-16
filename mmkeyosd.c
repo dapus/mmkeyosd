@@ -53,8 +53,7 @@ Colormap cmap;
 GC gc;
 struct font fontbig;
 struct font fontsmall;
-XftFont *xfont;
-int fonth;
+XftDraw *draw;
 Atom NetWMWindowOpacity;
 unsigned int numlockmask = 0;
 int wx, wy, sw, sh;
@@ -101,10 +100,6 @@ setup_font(struct font *font, char *fontstr) {
 
 void
 draw_text(struct font *font, XftColor *col, char *str, int x, int y) {
-	XftDraw *draw;
-
-	draw = XftDrawCreate(dpy, win, visual, cmap);
-
 	XftDrawStringUtf8(draw, col, font->xfont, x, y, (XftChar8 *)str, strlen(str));
 }
 
@@ -266,6 +261,8 @@ setup() {
 	unsigned long real_opacity[] = { opacity * 0xffffffff };
 	XChangeProperty(dpy, win, NetWMWindowOpacity, XA_CARDINAL, 32,
 			PropModeReplace, (unsigned char *)real_opacity, 1);
+
+	draw = XftDrawCreate(dpy, win, visual, cmap);
 
 	signal(SIGALRM, sigalrm);
 	signal(SIGCHLD, sigchld);
