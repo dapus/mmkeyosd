@@ -1,6 +1,6 @@
 
-char *fontstrbig = "-*-dejavu sans mono-medium-r-*-*-20-*-*-*-*-*-*-*";
-char *fontstrsmall = "-*-dejavu sans mono-medium-r-*-*-13-*-*-*-*-*-*-*";
+char *fontstrbig = "Dejavu Sans-15";
+char *fontstrsmall = "Dejavu Sans-10";
 char *fgcolor = "white";
 char *bgcolor = "black";
 char *errcolor = "red";
