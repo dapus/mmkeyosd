@@ -447,7 +447,7 @@ main() {
 		die("chdir: %s\n", strerror(errno));
 
 	config = config_read(".mmkeyosd/keys");
-	settings = settings_read(".mmekyosd/settings");
+	settings = settings_read(".mmkeyosd/settings");
 
 	fontstrbig   = settings_find_str(   settings, "fontbig",       "Dejavu Sans-15");
 	fontstrsmall = settings_find_str(   settings, "fontsmall",     "Dejavu Sans-10");
