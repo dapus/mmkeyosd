@@ -10,21 +10,25 @@
 #include <sys/time.h>
 
 #include <X11/Xlib.h>
-#include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/XF86keysym.h>
 #include <X11/Xft/Xft.h>
 #include <X11/Xproto.h>
 #include <X11/XKBlib.h>
 
+#include "config.h"
+#include "util.h"
 
+/*
 #define LENGTH(A) (sizeof(A) / sizeof(A[0]))
 #define err(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
 #define die(fmt, ...) do { fprintf(stderr, fmt, ##__VA_ARGS__); exit(1); } while(0)
+*/
 #define CENTER(A, B) (( (A)/2 ) - ( (B)/2 ))
 #define CLEANMASK(mask) (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
 
+/*
 struct
 config {
 	unsigned int mod;
@@ -33,6 +37,7 @@ config {
 	void (*disp)(struct config *, char *, int error);
 	char *cmd;
 };
+*/
 
 struct
 font {
@@ -40,10 +45,24 @@ font {
 	int h;
 };
 
+/*
 void text_with_bar(struct config *c, char *in, int error);
 void text_with_text(struct config *c, char *in, int error);
 
 #include "config.h"
+*/
+char *fontstrbig = "Dejavu Sans-15";
+char *fontstrsmall = "Dejavu Sans-10";
+char *fgcolor = "white";
+char *bgcolor = "black";
+char *errcolor = "red";
+int bw = 0;             /* border width    */
+int ww = 300;           /* window width    */
+int wh = 150;           /* window height   */
+int barw = 150;         /* bar width       */
+int barh = 15;          /* bar height      */
+float opacity = 0.8;    /* window opacity  */
+int wtimeout = 2000;    /* window time out in milliseconds */
 
 Display *dpy;
 Window win;
@@ -58,6 +77,8 @@ XftDraw *draw;
 Atom NetWMWindowOpacity;
 unsigned int numlockmask = 0;
 int wx, wy, sw, sh;
+struct config *config = NULL;
+struct settings *settings = NULL;
 
 XftColor fgcol;
 XftColor bgcol;
@@ -208,6 +229,7 @@ sigchld(int i) {
 void
 setup() {
 	int i, j;
+	struct config *c;
 
 	XSetWindowAttributes wattr;
 	XModifierKeymap *modmap;
@@ -244,8 +266,8 @@ setup() {
 			}
 		}
 	}
-	for(i=0; i < LENGTH(conf); i++)
-		grabkey(conf[i].mod, conf[i].key);
+	for(c=config; c; c=c->next)
+		grabkey(c->mod, c->key);
 
 	XSelectInput(dpy, root, KeyPressMask | SubstructureNotifyMask);
 
@@ -367,14 +389,15 @@ run() {
 	int i;
 	char *errmsg = NULL;
 	struct timeval t1, t2;
+	struct config *c;
 
 	XSync(dpy, False);
 	while(!XNextEvent(dpy, &ev)) {
 		if(ev.type == KeyPress) {
 			keysym = XkbKeycodeToKeysym(dpy, (KeyCode)ev.xkey.keycode, 0, 0);
-			for(i=0; i < LENGTH(conf); i++) {
-				if(conf[i].key == keysym &&
-						CLEANMASK(conf[i].mod) == CLEANMASK(ev.xkey.state)) {
+			for(c=config; c; c=c->next) {
+				if(c->key == keysym &&
+						CLEANMASK(c->mod) == CLEANMASK(ev.xkey.state)) {
 
 					if(!is_mapped) {
 						XMapRaised(dpy, win);
@@ -390,7 +413,7 @@ run() {
 						is_mapped = True;
 					}
 					/* gettimeofday(&t1, NULL); */
-					readcmd(conf[i].cmd, buf, sizeof buf,
+					readcmd(c->cmd, buf, sizeof buf,
 							errbuf+7/*skip the 'ERROR: ' part of the buffer */, sizeof(errbuf)-7);
 					/*
 					gettimeofday(&t2, NULL);
@@ -410,7 +433,7 @@ run() {
 						errmsg = "ERROR: Command failed";
 
 					start_timer();
-					conf[i].disp(&conf[i], errmsg ? errmsg : buf, errmsg ? True : False);
+					c->disp(c, errmsg ? errmsg : buf, errmsg ? True : False);
 					XSync(dpy, False);
 				}
 			}
@@ -420,6 +443,25 @@ run() {
 
 int
 main() {
+	if(chdir(getenv("HOME")) == -1)
+		die("chdir: %s\n", strerror(errno));
+
+	config = config_read(".mmkeyosd/keys");
+	settings = settings_read(".mmekyosd/settings");
+
+	fontstrbig   = settings_find_str(   settings, "fontbig",       "Dejavu Sans-15");
+	fontstrsmall = settings_find_str(   settings, "fontsmall",     "Dejavu Sans-10");
+	fgcolor      = settings_find_str(   settings, "fgcolor",       "white");
+	bgcolor      = settings_find_str(   settings, "bgcolor",       "black");
+	errcolor     = settings_find_str(   settings, "errcolor",      "red");
+	bw           = settings_find_int(   settings, "borderwidth",   0);
+	ww           = settings_find_int(   settings, "windowwidth",   300);
+	wh           = settings_find_int(   settings, "windowheight",  150);
+	barw         = settings_find_int(   settings, "barwidth",      150);
+	barh         = settings_find_int(   settings, "barheight",     15);
+	opacity      = settings_find_double(settings, "opacity",       0.8);
+	wtimeout     = settings_find_int(   settings, "windowtimeout", 2000);
+
 	setup();
 	run();
 	return 0;

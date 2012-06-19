@@ -4,7 +4,7 @@ include config.mk
 CC=gcc
 LD=gcc
 CFLAGS=-g -Wall `pkg-config --cflags xft`
-OBJ=mmkeyosd.o
+OBJ=mmkeyosd.o config.o
 LIBS=-lX11 `pkg-config --libs xft`
 
 all: mmkeyosd
@@ -18,10 +18,6 @@ mmkeyosd: $(OBJ)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
 ${OBJ}: config.h config.mk
-
-config.h:
-	@echo creating $@ from config.def.h
-	@cp config.def.h $@
 
 install: mmkeyosd
 	@echo installing to $(DESTDIR)$(PREFIX)/bin...
