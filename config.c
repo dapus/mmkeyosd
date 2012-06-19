@@ -401,22 +401,4 @@ settings_find_str(struct settings *list, const char *key, char *def) {
 	}
 	return def;
 }
-/*
-void
-text_with_text(struct config *sf, char *sfd, int er){
-}
-void
-text_with_bar(struct config *sf, char *sfd, int er){
-}
 
-int
-main() {
-	struct config *config, *c;
-	config = config_read("config.example");
-	for(c=config; c; c=c->next) {
-		printf("'%s'\n", c->text);
-		printf("'%s'\n", c->cmd);
-	}
-	return 0;
-}
-*/
