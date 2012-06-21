@@ -1,1 +1,12 @@
-borderwidth = 20
+fontbig = Dejavu Sans-15
+fontsmall = Dejavu Sans-10
+fgcolor = white
+bgcolor = black
+errcolor = red
+borderwidth = 0
+windowwidth = 300
+windowheight = 150
+barwidth = 150
+barheight = 15
+opacity = 0.8
+windowtimeout = 2000
