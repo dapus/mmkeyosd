@@ -10,28 +10,13 @@
 #include "util.h"
 #include "config.h"
 
+#include "keys.h"
+
 typedef struct String {
 	int size, len;
 	char *str;
 } String;
 
-struct keytable {
-	char *name;
-	KeySym key;
-};
-
-struct keytable
-keytable[] = {
-	{"MonBrightnessUp",       XF86XK_MonBrightnessUp},
-	{"MonBrightnessDown",     XF86XK_MonBrightnessDown},
-	{"AudioLowerVolume",      XF86XK_AudioLowerVolume},
-	{"AudioRaiseVolume",      XF86XK_AudioRaiseVolume},
-	{"AudioMute",             XF86XK_AudioMute},
-	{"AudioPlay",             XF86XK_AudioPlay},
-	{"AudioNext",             XF86XK_AudioNext},
-	{"AudioPrev",             XF86XK_AudioPrev},
-	{"WLAN",                  XF86XK_WLAN},
-};
 
 struct modtable {
 	char *name;
