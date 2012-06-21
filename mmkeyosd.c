@@ -19,25 +19,9 @@
 #include "config.h"
 #include "util.h"
 
-/*
-#define LENGTH(A) (sizeof(A) / sizeof(A[0]))
-#define err(fmt, ...) fprintf(stderr, fmt, ##__VA_ARGS__)
-#define die(fmt, ...) do { fprintf(stderr, fmt, ##__VA_ARGS__); exit(1); } while(0)
-*/
 #define CENTER(A, B) (( (A)/2 ) - ( (B)/2 ))
 #define CLEANMASK(mask) (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
-
-/*
-struct
-config {
-	unsigned int mod;
-	KeySym key;
-	char *text;
-	void (*disp)(struct config *, char *, int error);
-	char *cmd;
-};
-*/
 
 struct
 font {
@@ -45,24 +29,18 @@ font {
 	int h;
 };
 
-/*
-void text_with_bar(struct config *c, char *in, int error);
-void text_with_text(struct config *c, char *in, int error);
-
-#include "config.h"
-*/
-char *fontstrbig = "Dejavu Sans-15";
-char *fontstrsmall = "Dejavu Sans-10";
-char *fgcolor = "white";
-char *bgcolor = "black";
-char *errcolor = "red";
-int bw = 0;             /* border width    */
-int ww = 300;           /* window width    */
-int wh = 150;           /* window height   */
-int barw = 150;         /* bar width       */
-int barh = 15;          /* bar height      */
-float opacity = 0.8;    /* window opacity  */
-int wtimeout = 2000;    /* window time out in milliseconds */
+char *fontstrbig;
+char *fontstrsmall;
+char *fgcolor;
+char *bgcolor;
+char *errcolor;
+int bw;             /* border width    */
+int ww;           /* window width    */
+int wh;           /* window height   */
+int barw;         /* bar width       */
+int barh;          /* bar height      */
+float opacity;    /* window opacity  */
+int wtimeout;    /* window time out in milliseconds */
 
 Display *dpy;
 Window win;
@@ -386,9 +364,8 @@ run() {
 	KeySym keysym;
 	char buf[256];
 	char errbuf[256] = {"ERROR: "};
-	int i;
 	char *errmsg = NULL;
-	struct timeval t1, t2;
+	/*struct timeval t1, t2;*/
 	struct config *c;
 
 	XSync(dpy, False);
