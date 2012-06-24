@@ -149,14 +149,76 @@ void
 	return NULL;
 }
 
+char *
+read_line(char *buf, size_t size, FILE *f, const char *filename) {
+	int len;
+
+	if(!fgets(buf, size, f)) {
+		if(ferror(f))
+			die("Error while reading %s: %s\n", filename, strerror(errno));
+		else if(feof(f))
+			return NULL;
+	}
+
+	len = strlen(buf);
+
+	/* remove newline */
+	if(buf[len-1] == '\n')
+		buf[--len] = '\0';
+
+	/* skip comments and empty lines */
+	if(!len || buf[0] == '#')
+		return NULL;
+
+	return buf;
+}
+
+char *
+nextword(char *start, char **end) {
+	char *e;
+
+	skipws(start);
+	for(e=start; *e != '\0'; e++) {
+		if(*e == ' ' || *e == '\t')
+			break;
+	}
+
+	*e = '\0';
+	if(end)
+		*end = e;
+
+	return start;
+}
+
+char *
+nextquoted(char *start, char **end) {
+	char *e;
+
+	skipws(start);
+	if(*start != '"')
+		return NULL;
+
+	for(e=++start; e != '\0'; e++) {
+		if(*e == '"')
+			break;
+	}
+	if(*e == '\0')
+		return NULL;
+
+	*e = '\0';
+	*end = e;
+
+	return start;
+}
+
 struct config *
 config_read(const char *file) {
 	FILE *f;
 	String line;
 	struct config *config = NULL;
 	char buf[1024];
-	int lc, len;
-	char *lineend, *start, *end, *keystr, *text, *cmd, *dispstr, *s, *modstr;
+	int lc;
+	char *lineend, *end, *keystr, *text, *cmd, *dispstr, *s, *modstr;
 	KeySym k;
 	void (*disp)(struct config *, char *, int);
 
@@ -167,100 +229,65 @@ config_read(const char *file) {
 		return NULL;
 	}
 
-	for(lc=0;;lc++) {
-		memset(buf, 0, sizeof buf);
-		if(!fgets(buf, sizeof buf, f)) {
-			if(ferror(f))
-				die("Error while reading %s: %s\n", file, strerror(errno));
-			else if(feof(f))
+	for(lc=1;;lc++) {
+		if(!read_line(buf, sizeof buf, f, file)) {
+			if(feof(f))
 				break;
+			continue;
 		}
 
 		string_append(line, buf);
 
 		/* check if we read the whole line */
-		len = strlen(buf);
-		if(buf[len-1] != '\n' || buf[len-2] == '\\') {
-			/* remove backslash */
-			if(line.str[line.len-2] == '\\') {
-				line.str[line.len-2] = '\0';
-				line.len-=2;
-			}
+		if(line.str[line.len-1] == '\\') {
+			line.str[--line.len] = '\0';
+
 			if(!feof(f))
 				continue;
 		}
-		/* remove newline */
-		if(line.str[line.len-1] == '\n') {
-			line.str[line.len-1] = '\0';
-			line.len--;
-		}
+
 		lineend = &line.str[line.len];
 
-		/* skip comments and empty lines */
-		if(!line.len || line.str[0] == '#')
-			goto end;
-
-		start = line.str;
-		skipws(start);
-		for(end=start; end != lineend; end++) {
-			if(*end == ' ' || *end == '\t')
-				break;
-		}
+		/* Get modifiers and key */
+		modstr = nextword(line.str, &end);
 		if(end == lineend)
 			goto syntax;
-		*end = '\0';
-		modstr = start;
-		s = strchr(start, '+');
+
+		s = strchr(modstr, '+');
 		if(s) {
 			*s = '\0';
 			keystr = s+1;
 		} else {
-			keystr = start;
+			keystr = modstr;
 			modstr = NULL;
 		}
 
-		start = end+1;
-		skipws(start);
-		for(end=start; end != lineend; end++) {
-			if(*end == ' ' || *end == '\t')
-				break;
-		}
+		/* Get display function */
+		dispstr = nextword(end+1, &end);
 		if(end == lineend)
 			goto syntax;
-		*end = '\0';
-		dispstr = start;
 
-		start = end+1;
-		skipws(start);
-		if(*start != '"')
-			goto syntax;
-		start++;
-		for(end=start; end != lineend; end++) {
-			if(*end == '"')
-				break;
-		}
-		if(end == lineend)
-			goto syntax;
-		*end = '\0';
-		text = start;
-
-		start = end+1;
-		skipws(start);
-		cmd = start;
-		if(lineend-start < 1)
+		/* Get text */
+		text = nextquoted(end+1, &end);
+		if(text == NULL)
 			goto syntax;
 
-		k = keyfromstr(keystr);
-		if(k == NoSymbol)
+		/* Get command */
+		cmd = end+1;
+		skipws(cmd);
+		if(lineend-cmd < 1)
+			goto syntax;
+
+
+		if((k = keyfromstr(keystr)) == NoSymbol)
 			die("%s is not a valid hotkey\n", keystr);
 
-		disp = dispfuncfromstr(dispstr);
-		if(!disp)
+		if(!(disp = dispfuncfromstr(dispstr)))
 			die("%s is not a valid display function\n", dispstr);
 
-//		printf("'%s', '%s', '%s', '%s', '%s', %i\n", keystr, modstr, text, dispstr, cmd, k); 
+//		printf("'%s', '%s', '%s', '%s', '%s', %i\n", modstr, keystr, dispstr, text, cmd, k); 
 		config_add(&config, modstr ? modfromstr(modstr) : 0, k, text, disp, cmd);
-end:
+
 		string_clear(line);
 	}
 
@@ -291,45 +318,35 @@ settings_read(const char *file) {
 	struct settings *settings= NULL;
 	char buf[1024];
 	int lc;
-	char *start, *end, *sstart;
+	char *key, *value, *end;
 
 	if(!(f = fopen(file, "r"))) {
 		err("%s: fopen: %s\n", file, strerror(errno));
 		return NULL;
 	}
 
-	for(lc=0;;lc++) {
-		memset(buf, 0, sizeof buf);
-		if(!fgets(buf, sizeof buf, f)) {
-			if(ferror(f))
-				die("Error while reading %s: %s\n", file, strerror(errno));
-			else if(feof(f))
+	for(lc=1;;lc++) {
+		if(!read_line(buf, sizeof buf, f, file)) {
+			if(feof(f))
 				break;
+			continue;
 		}
 
-		/* skip comments and empty lines */
-		if(!strlen(buf) || buf[0] == '#')
-			continue;
-
-		/* remove newline */
-		if(buf[strlen(buf)-1] == '\n')
-			buf[strlen(buf)-1] = '\0';
-
-		start = buf;
-		end = strchr(start, '=');
-		if(!end || end == start)
+		key = buf;
+		end = strchr(key, '=');
+		if(!end || end == key)
 			goto syntax;
 
-		sstart = end+1;
-		end--;
-		skipwsr(end, start);
-		end++;
-		*end = '\0';
+		value = end+1;
 
-		skipws(sstart);
+		end--;
+		skipwsr(end, key);
+		*++end = '\0';
+
+		skipws(value);
 		
-		/* printf("'%s' '%s'\n", start, sstart); */
-		settings_add(&settings, start, sstart);
+//		printf("'%s' '%s'\n", key, value);
+		settings_add(&settings, key, value);
 	}
 
 	return settings;
