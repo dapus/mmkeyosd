@@ -72,21 +72,6 @@ modtable[] = {
 #define skipwsr(str, start) \
 	for(; str != start && (*str == ' ' || *str == '\t'); str--);
 
-/* linked list macros */
-#define LIST_APPEND(LIST, NODE) \
-	do { \
-		if(!(LIST)) { \
-			(LIST) = NODE; \
-			(LIST)->next = NULL; \
-			(LIST)->prev = NODE; \
-		} else { \
-			NODE->prev = (LIST)->prev; \
-			NODE->next = NULL; \
-			NODE->prev->next = NODE; \
-			(LIST)->prev = NODE; \
-		} \
-	} while(0)
-
 void *
 xrealloc(void *old, size_t n) {
 	void *data;
