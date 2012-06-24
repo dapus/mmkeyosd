@@ -111,6 +111,15 @@ text_width(struct font *font, char *str) {
 	return ext.xOff;
 }
 
+void
+resizeclear(int ww, int wh) {
+	XMoveResizeWindow(dpy, win, CENTER(sw, ww), wy, ww, wh);
+
+	/* Clear window */
+	XSetForeground(dpy, gc, bgcol.pixel);
+	XFillRectangle(dpy, win, gc, 0, 0, ww, wh);
+}
+
 void 
 text_with_text(struct config *c, char *in, int error) {
 	int nww, tws, twb;
@@ -119,11 +128,8 @@ text_with_text(struct config *c, char *in, int error) {
 	tws = text_width(&fontsmall, in);
 	twb = text_width(&fontbig, c->text);
 	nww = MAX(ww, MAX(tws, twb) + 20);
-	XMoveResizeWindow(dpy, win, CENTER(sw, nww), wy, nww, wh);
 
-	/* Clear window */
-	XSetForeground(dpy, gc, bgcol.pixel);
-	XFillRectangle(dpy, win, gc, 0, 0, nww, wh);
+	resizeclear(nww, wh);
 
 	draw_text(&fontbig, &fgcol, c->text, CENTER(nww, text_width(&fontbig, c->text)),
 			CENTER(wh/2, fontbig.h)+fontbig.h);
@@ -143,13 +149,10 @@ text_with_bar(struct config *c, char *in, int error) {
 	/* Calculate window size */
 	twb = text_width(&fontbig, c->text);
 	nww = MAX(ww, twb + 30);
-	XMoveResizeWindow(dpy, win, CENTER(sw, nww), wy, nww, wh);
 
 	XRectangle r = { CENTER(nww, barw), (wh/2), barw, barh };
 
-	/* Clear window */
-	XSetForeground(dpy, gc, bgcol.pixel);
-	XFillRectangle(dpy, win, gc, 0, 0, nww, wh);
+	resizeclear(nww, wh);
 
 	draw_text(&fontbig, &fgcol, c->text, CENTER(nww, text_width(&fontbig, c->text)),
 			CENTER(wh/2, fontbig.h)+fontbig.h);
@@ -377,6 +380,7 @@ run() {
 						CLEANMASK(c->mod) == CLEANMASK(ev.xkey.state)) {
 
 					if(!is_mapped) {
+						resizeclear(ww, wh);
 						XMapRaised(dpy, win);
 						/* Wait for window to be mapped */
 						while (1) {
