@@ -2,7 +2,5 @@
 
 BRFILE=/sys/class/backlight/acpi_video0/brightness
 BRMAXFILE=/sys/class/backlight/acpi_video0/max_brightness
-BRMAX=`cat $BRMAXFILE`
-BR=`cat $BRFILE`
-echo | awk "END{print $BR/$BRMAX*100}"
+echo `cat $BRFILE` `cat $BRMAXFILE` | awk 'END{print int($1/$2*100)}'
 
