@@ -373,51 +373,54 @@ run() {
 
 	XSync(dpy, False);
 	while(!XNextEvent(dpy, &ev)) {
-		if(ev.type == KeyPress) {
-			keysym = XkbKeycodeToKeysym(dpy, (KeyCode)ev.xkey.keycode, 0, 0);
-			for(c=config; c; c=c->next) {
-				if(c->key == keysym &&
-						CLEANMASK(c->mod) == CLEANMASK(ev.xkey.state)) {
+		if(ev.type != KeyPress)
+			continue;
 
-					if(!is_mapped) {
-						resizeclear(ww, wh);
-						XMapRaised(dpy, win);
-						/* Wait for window to be mapped */
-						while (1) {
-							XMaskEvent(dpy, SubstructureNotifyMask, &ev);
-							if ((ev.type == CreateNotify || ev.type == MapNotify)
-								&& ev.xcreatewindow.window == win)
-							{
-								break;
-							}
-						}
-						is_mapped = True;
-					}
-					/* gettimeofday(&t1, NULL); */
-					readcmd(c->cmd, buf, sizeof buf,
-							errbuf+7/*skip the 'ERROR: ' part of the buffer */, sizeof(errbuf)-7);
-					/*
-					gettimeofday(&t2, NULL);
-					printf("cmd finished after %li ms\n", ((t2.tv_sec-t1.tv_sec)*1000) + ((t2.tv_usec-t1.tv_usec)/1000));
-					*/
-
-					if(buf[strlen(buf)-1] == '\n')
-						buf[strlen(buf)-1] = '\0';
-					if(errbuf[strlen(errbuf)-1] == '\n')
-						errbuf[strlen(errbuf)-1] = '\0';
-
-					if(strlen(buf))
-						errmsg = NULL;
-					else if(strlen(errbuf+7))
-						errmsg = errbuf;
-					else
-						errmsg = "ERROR: Command failed";
-
-					start_timer();
-					c->disp(c, errmsg ? errmsg : buf, errmsg ? True : False);
-					XSync(dpy, False);
-				}
+		keysym = XkbKeycodeToKeysym(dpy, (KeyCode)ev.xkey.keycode, 0, 0);
+		for(c=config; c; c=c->next) {
+			if(c->key != keysym &&
+					CLEANMASK(c->mod) != CLEANMASK(ev.xkey.state)) {
+				continue;
 			}
+
+			if(!is_mapped) {
+				resizeclear(ww, wh);
+				XMapRaised(dpy, win);
+				/* Wait for window to be mapped */
+				while(1) {
+					XMaskEvent(dpy, SubstructureNotifyMask, &ev);
+					if ((ev.type == CreateNotify || ev.type == MapNotify)
+						&& ev.xcreatewindow.window == win)
+					{
+						break;
+					}
+				}
+				is_mapped = True;
+			}
+			/* gettimeofday(&t1, NULL); */
+			readcmd(c->cmd, buf, sizeof buf,
+					errbuf+7/*skip the 'ERROR: ' part of the buffer */,
+					sizeof(errbuf)-7);
+			/*
+			gettimeofday(&t2, NULL);
+			printf("cmd finished after %li ms\n", ((t2.tv_sec-t1.tv_sec)*1000) + ((t2.tv_usec-t1.tv_usec)/1000));
+			*/
+
+			if(buf[strlen(buf)-1] == '\n')
+				buf[strlen(buf)-1] = '\0';
+			if(errbuf[strlen(errbuf)-1] == '\n')
+				errbuf[strlen(errbuf)-1] = '\0';
+
+			if(strlen(buf))
+				errmsg = NULL;
+			else if(strlen(errbuf+7))
+				errmsg = errbuf;
+			else
+				errmsg = "ERROR: Command failed";
+
+			start_timer();
+			c->disp(c, errmsg ? errmsg : buf, errmsg ? True : False);
+			XSync(dpy, False);
 		}
 	}
 }
