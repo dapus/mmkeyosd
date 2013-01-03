@@ -10,8 +10,6 @@
 #include "util.h"
 #include "config.h"
 
-#include "keys.h"
-
 typedef struct String {
 	int size, len;
 	char *str;
@@ -110,19 +108,19 @@ config_add(struct config **list, unsigned int mod, KeySym key, const char *text,
 
 KeySym
 keyfromstr(const char *str) {
-	int i;
 	KeySym k;
+	char xf86str[64] = {"XF86"};
 
 	k = XStringToKeysym(str);
-	if(k != NoSymbol)
-		return k;
-
-	for(i=0; i < LENGTH(keytable); i++) {
-		if(strcmp(str, keytable[i].name) == 0)
-			return keytable[i].key;
+	/* Some keys are prefixed with XF86 (specifically those
+	 * defined in XF86keysym.h) */
+	if(k == NoSymbol) {
+		strncpy(&xf86str[4], str, sizeof xf86str - 4);
+		xf86str[63] = '\0';
+		k = XStringToKeysym(xf86str);
 	}
 
-	return NoSymbol;
+	return k;
 }
 
 unsigned int
