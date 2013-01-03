@@ -430,7 +430,11 @@ run() {
 }
 
 int
-main() {
+main(int argc, char *argv[]) {
+	if(argc > 1 && strcmp(argv[1], "-v") == 0) {
+		puts("mmkeyosd "VERSION);
+		exit(0);
+	}
 	if(chdir(getenv("HOME")) == -1)
 		die("chdir: %s\n", strerror(errno));
 
