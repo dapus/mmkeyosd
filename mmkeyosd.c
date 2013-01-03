@@ -42,6 +42,7 @@ int barw;         /* bar width       */
 int barh;          /* bar height      */
 float opacity;    /* window opacity  */
 int wtimeout;    /* window time out in milliseconds */
+char *shell;
 
 Display *dpy;
 Window win;
@@ -308,8 +309,8 @@ readcmd(char *cmd, char *stdoutbuf, int stdoutbuflen, char *stderrbuf, int stder
 		close(STDERR_FILENO);
 		dup(stderrp[1]);
 
-		execl("/bin/sh", "/bin/sh", "-c", cmd, NULL);
-		die("/bin/sh: %s", strerror(errno));
+		execl(shell, shell, "-c", cmd, NULL);
+		die("%s: %s", shell, strerror(errno));
 	}
 
 	struct pollfd ufds[2] = {
@@ -453,6 +454,7 @@ main(int argc, char *argv[]) {
 	barh         = settings_find_int(   settings, "barheight",     15);
 	opacity      = settings_find_double(settings, "opacity",       0.8);
 	wtimeout     = settings_find_int(   settings, "windowtimeout", 2000);
+	shell        = settings_find_str(   settings, "shell",         "/bin/sh");
 
 	setup();
 	run();

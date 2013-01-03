@@ -40,6 +40,7 @@ Possible settings are:
 	barheight        unsigned int
 	opacity          float (0.0 - 1.0)
 	windowtimeout    unsigned int (milliseconds)
+	shell            string
 
 Everything else, empty lines and lines starting with `#` are ignored.
 See keys.example and settings.example for more info.
