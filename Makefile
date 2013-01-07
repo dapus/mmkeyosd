@@ -23,8 +23,8 @@ install: mmkeyosd
 	@echo installing to $(DESTDIR)$(PREFIX)/bin...
 	@mkdir -p $(DESTDIR)$(PREFIX)/bin
 	@install -m755 mmkeyosd $(DESTDIR)$(PREFIX)/bin
-	@mkdir -p ${DESTDIR}${MANPREFIX}/man1
-	@install -m644 mmkeyosd.1 ${DESTDIR}${MANPREFIX}/man1/
+	@mkdir -p $(DESTDIR)$(MANPREFIX)/man1
+	@install -m644 mmkeyosd.1 $(DESTDIR)$(MANPREFIX)/man1/
 
 
 clean:
