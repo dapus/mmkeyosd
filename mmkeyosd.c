@@ -199,6 +199,26 @@ sigalrm(int i) {
 }
 
 void
+loadconfigs() {
+	config = config_read(".mmkeyosd/keys");
+	settings = settings_read(".mmkeyosd/settings");
+
+	fontstrbig   = settings_find_str(   settings, "fontbig",       "Dejavu Sans-15");
+	fontstrsmall = settings_find_str(   settings, "fontsmall",     "Dejavu Sans-10");
+	fgcolor      = settings_find_str(   settings, "fgcolor",       "white");
+	bgcolor      = settings_find_str(   settings, "bgcolor",       "black");
+	errcolor     = settings_find_str(   settings, "errcolor",      "red");
+	bw           = settings_find_int(   settings, "borderwidth",   0);
+	ww           = settings_find_int(   settings, "windowwidth",   300);
+	wh           = settings_find_int(   settings, "windowheight",  150);
+	barw         = settings_find_int(   settings, "barwidth",      150);
+	barh         = settings_find_int(   settings, "barheight",     15);
+	opacity      = settings_find_double(settings, "opacity",       0.8);
+	wtimeout     = settings_find_int(   settings, "windowtimeout", 2000);
+	shell        = settings_find_str(   settings, "shell",         "/bin/sh");
+}
+
+void
 sigchld(int i) {
 	int p;
 
@@ -207,6 +227,16 @@ sigchld(int i) {
 		pid = -1;
 
 	signal(SIGCHLD, sigchld);
+}
+
+void
+sigusr1(int i) {
+	puts("Caught signal USR1, reloading config files...");
+
+	config_clear(&config);
+	settings_clear(&settings);
+
+	loadconfigs();
 }
 
 void
@@ -272,6 +302,7 @@ setup() {
 
 	signal(SIGALRM, sigalrm);
 	signal(SIGCHLD, sigchld);
+	signal(SIGUSR1, sigusr1);
 }
 
 void
@@ -439,23 +470,7 @@ main(int argc, char *argv[]) {
 	if(chdir(getenv("HOME")) == -1)
 		die("chdir: %s\n", strerror(errno));
 
-	config = config_read(".mmkeyosd/keys");
-	settings = settings_read(".mmkeyosd/settings");
-
-	fontstrbig   = settings_find_str(   settings, "fontbig",       "Dejavu Sans-15");
-	fontstrsmall = settings_find_str(   settings, "fontsmall",     "Dejavu Sans-10");
-	fgcolor      = settings_find_str(   settings, "fgcolor",       "white");
-	bgcolor      = settings_find_str(   settings, "bgcolor",       "black");
-	errcolor     = settings_find_str(   settings, "errcolor",      "red");
-	bw           = settings_find_int(   settings, "borderwidth",   0);
-	ww           = settings_find_int(   settings, "windowwidth",   300);
-	wh           = settings_find_int(   settings, "windowheight",  150);
-	barw         = settings_find_int(   settings, "barwidth",      150);
-	barh         = settings_find_int(   settings, "barheight",     15);
-	opacity      = settings_find_double(settings, "opacity",       0.8);
-	wtimeout     = settings_find_int(   settings, "windowtimeout", 2000);
-	shell        = settings_find_str(   settings, "shell",         "/bin/sh");
-
+	loadconfigs();
 	setup();
 	run();
 	return 0;
