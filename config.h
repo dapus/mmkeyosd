@@ -26,6 +26,4 @@ int settings_find_int(struct settings *list, const char *key, int def);
 double settings_find_double(struct settings *list, const char *key, double def);
 char *settings_find_str(struct settings *list, const char *key, char *def);
 
-void settings_clear(struct settings **list);
-void config_clear(struct config **config);
 #endif

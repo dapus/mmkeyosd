@@ -387,35 +387,3 @@ settings_find_str(struct settings *list, const char *key, char *def) {
 	return def;
 }
 
-void
-settings_clear(struct settings **list) {
-	struct settings *l, *next;
-
-	for(l=*list; l; l=next) {
-		next = l->next;
-		if(l->key)
-			free(l->key);
-		if(l->value)
-			free(l->value);
-		free(l);
-	}
-
-	list = NULL;
-}
-
-void
-config_clear(struct config **config) {
-	struct config *c, *next;
-
-	for(c=*config; c; c=next) {
-		next = c->next;
-		if(c->text)
-			free(c->text);
-		if(c->cmd)
-			free(c->cmd);
-		free(c);
-	}
-
-	config = NULL;
-}
-
