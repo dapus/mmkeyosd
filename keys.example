@@ -1,5 +1,5 @@
-MonBrightnessUp      text_with_bar    "Brightness" ~/.mmkeyosd/brightness.sh
-MonBrightnessDown    text_with_bar    "Brightness" ~/.mmkeyosd/brightness.sh
+MonBrightnessUp      text_with_bar    "Brightness" exec ~/.mmkeyosd/brightness.sh
+MonBrightnessDown    text_with_bar    "Brightness" exec ~/.mmkeyosd/brightness.sh
 
 AudioLowerVolume     text_with_bar    "Volume" amixer set Master 5%- | sed -n -e 's/.*Playback.*\[\([0-9]*\)%\].*/\1/p' | head -n 1
 AudioRaiseVolume     text_with_bar    "Volume" amixer set Master 5%+ | sed -n -e 's/.*Playback.*\[\([0-9]*\)%\].*/\1/p' | head -n 1
