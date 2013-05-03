@@ -253,6 +253,7 @@ setup() {
 		grabkey(c->mod, c->key);
 
 	XSelectInput(dpy, root, KeyPressMask | SubstructureNotifyMask);
+	XSelectInput(dpy, win, ButtonPressMask);
 
 	setup_font(&fontbig, fontstrbig);
 	setup_font(&fontsmall, fontstrsmall);
@@ -375,6 +376,16 @@ run() {
 
 	XSync(dpy, False);
 	while(!XNextEvent(dpy, &ev)) {
+
+		if(ev.type == ButtonPress) {
+			if(ev.xbutton.window == win && is_mapped) {
+				XUnmapWindow(dpy, win);
+				XFlush(dpy);
+				is_mapped = False;
+			}
+			continue;
+		}
+
 		if(ev.type != KeyPress)
 			continue;
 
