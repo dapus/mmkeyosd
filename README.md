@@ -4,6 +4,10 @@ mmkeyosd
 mmkeyosd means Multimedia key OSD. It allows you
 to use your multimedia keys (and any other keys) to display an OSD.
 
+TODO
+----
+* xinerama
+
 Configuration
 -------------
 Keys are configured in ~/.mmkeyosd/keys. The syntax is easy; each line 
