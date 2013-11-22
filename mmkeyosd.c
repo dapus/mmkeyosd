@@ -16,6 +16,7 @@
 #include <X11/Xft/Xft.h>
 #include <X11/Xproto.h>
 #include <X11/XKBlib.h>
+#include <X11/extensions/Xinerama.h>
 
 #include "config.h"
 #include "util.h"
@@ -23,6 +24,9 @@
 #define CENTER(A, B) (( (A)/2 ) - ( (B)/2 ))
 #define CLEANMASK(mask) (mask & ~(numlockmask|LockMask) & (ShiftMask|ControlMask|Mod1Mask|Mod2Mask|Mod3Mask|Mod4Mask|Mod5Mask))
 #define MAX(A, B) ((A) > (B) ? (A) : (B))
+#define MIN(A, B) ((A) < (B) ? (A) : (B))
+#define INTERSECT(x,y,w,h,r)  (MAX(0, MIN((x)+(w),(r).x_org+(r).width)  - MAX((x),(r).x_org)) \
+                             * MAX(0, MIN((y)+(h),(r).y_org+(r).height) - MAX((y),(r).y_org)))
 
 struct
 font {
@@ -56,7 +60,7 @@ struct font fontsmall;
 XftDraw *draw;
 Atom NetWMWindowOpacity;
 unsigned int numlockmask = 0;
-int wx, wy, sw, sh;
+int wx, wy, sw, sh, xoff, yoff;
 struct config *config = NULL;
 struct settings *settings = NULL;
 
@@ -114,12 +118,59 @@ text_width(struct font *font, char *str) {
 }
 
 void
-resizeclear(int ww, int wh) {
-	XMoveResizeWindow(dpy, win, CENTER(sw, ww), wy, ww, wh);
+moveresizeclear(int ww, int wh) {
+	XMoveResizeWindow(dpy, win, CENTER(sw, ww)+xoff, CENTER(sh, wh)+yoff, ww, wh);
 
 	/* Clear window */
 	XSetForeground(dpy, gc, bgcol.pixel);
 	XFillRectangle(dpy, win, gc, 0, 0, ww, wh);
+}
+
+/* Yes I stole this from dmenu */
+void
+updategeom() {
+	int a, j, di, i = 0, area = 0, x, y;
+	unsigned int du;
+	Window w, pw, dw, *dws;
+	XWindowAttributes wa;
+	int n;
+	XineramaScreenInfo *info;
+
+	if((info = XineramaQueryScreens(dpy, &n))) {
+
+		XGetInputFocus(dpy, &w, &di);
+		if(w != root && w != PointerRoot && w != None) {
+			/* find top-level window containing current input focus */
+			do {
+				if(XQueryTree(dpy, (pw = w), &dw, &w, &dws, &du) && dws)
+					XFree(dws);
+			} while(w != root && w != pw);
+			/* find xinerama screen with which the window intersects most */
+			if(XGetWindowAttributes(dpy, pw, &wa))
+				for(j = 0; j < n; j++)
+					if((a = INTERSECT(wa.x, wa.y, wa.width, wa.height, info[j])) > area) {
+						area = a;
+						i = j;
+					}
+		}
+		/* no focused window is on screen, so use pointer location instead */
+		if(!area && XQueryPointer(dpy, root, &dw, &dw, &x, &y, &di, &di, &du))
+			for(i = 0; i < n; i++)
+				if(INTERSECT(x, y, 1, 1, info[i]))
+					break;
+
+		xoff = info[i].x_org;
+		yoff = info[i].y_org;
+		sw = info[i].width;
+		sh = info[i].height;
+		XFree(info);
+	}
+	else {
+		xoff = 0;
+		yoff = 0;
+		sw = DisplayWidth(dpy, screen);
+		sh = DisplayHeight(dpy, screen);
+	}
 }
 
 void 
@@ -131,7 +182,7 @@ text_with_text(struct config *c, char *in, int error) {
 	twb = text_width(&fontbig, c->text);
 	nww = MAX(ww, MAX(tws, twb) + 20);
 
-	resizeclear(nww, wh);
+	moveresizeclear(nww, wh);
 
 	draw_text(&fontbig, &fgcol, c->text, CENTER(nww, text_width(&fontbig, c->text)),
 			CENTER(wh/2, fontbig.h)+fontbig.h);
@@ -154,7 +205,7 @@ text_with_bar(struct config *c, char *in, int error) {
 
 	XRectangle r = { CENTER(nww, barw), (wh/2), barw, barh };
 
-	resizeclear(nww, wh);
+	moveresizeclear(nww, wh);
 
 	draw_text(&fontbig, &fgcol, c->text, CENTER(nww, text_width(&fontbig, c->text)),
 			CENTER(wh/2, fontbig.h)+fontbig.h);
@@ -401,7 +452,8 @@ run() {
 			continue;
 
 		if(!is_mapped) {
-			resizeclear(ww, wh);
+			updategeom();
+			moveresizeclear(ww, wh);
 			XMapRaised(dpy, win);
 			/* Wait for window to be mapped */
 			while(1) {
