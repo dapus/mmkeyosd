@@ -60,7 +60,7 @@ struct font fontsmall;
 XftDraw *draw;
 Atom NetWMWindowOpacity;
 unsigned int numlockmask = 0;
-int wx, wy, sw, sh, xoff, yoff;
+int sw, sh, xoff, yoff;
 struct config *config = NULL;
 struct settings *settings = NULL;
 
@@ -279,13 +279,11 @@ setup() {
 
 	sw = DisplayWidth(dpy, screen);
 	sh = DisplayHeight(dpy, screen);
-	wx = CENTER(sw, ww);
-	wy = CENTER(sh, wh);
 
 	wattr.override_redirect = True;
 	wattr.background_pixel = bgcol.pixel; 
 	wattr.border_pixel = fgcol.pixel;
-	win = XCreateWindow(dpy, root, wx, wy, ww, wh, bw,
+	win = XCreateWindow(dpy, root, 0, 0, ww, wh, bw,
 			CopyFromParent, InputOutput, CopyFromParent,
 			CWOverrideRedirect | CWBackPixel | CWBorderPixel, &wattr);
 
