@@ -5,7 +5,7 @@ CC=gcc
 LD=gcc
 CFLAGS=-g -Wall -DVERSION=\"${VERSION}\" `pkg-config --cflags xft`
 OBJ=mmkeyosd.o config.o
-LIBS=-lX11 `pkg-config --libs xft`
+LIBS=-lX11 `pkg-config --libs xft` -lXinerama
 
 all: mmkeyosd
 
