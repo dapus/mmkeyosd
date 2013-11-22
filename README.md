@@ -6,7 +6,7 @@ to use your multimedia keys (and any other keys) to display an OSD.
 
 TODO
 ----
-* xinerama
+* Fix code
 
 Configuration
 -------------
