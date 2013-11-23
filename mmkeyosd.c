@@ -39,13 +39,13 @@ char *fontstrsmall;
 char *fgcolor;
 char *bgcolor;
 char *errcolor;
-int bw;             /* border width    */
+int bw;           /* border width    */
 int ww;           /* window width    */
 int wh;           /* window height   */
 int barw;         /* bar width       */
-int barh;          /* bar height      */
+int barh;         /* bar height      */
 float opacity;    /* window opacity  */
-int wtimeout;    /* window time out in milliseconds */
+int wtimeout;     /* window time out in milliseconds */
 char *shell;
 
 Display *dpy;
