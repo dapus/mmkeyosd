@@ -10,7 +10,11 @@ AudioMute            text_with_text   "Volume" amixer set Master toggle | sed -n
 AudioPlay    text_with_text   "MPD"    printf '%s: %s\n' "$(mpc toggle | sed -n -e 's/^\[\(.*\)\].*/\1/' -e 's/^p/P/p')" "$(mpc current)"
 AudioPrev    text_with_text   "MPD"    mpc prev>/dev/null; s=`mpc current`; [ "$s" ] && echo $s || echo Nothing to Play
 AudioNext    text_with_text   "MPD"    mpc next>/dev/null; s=`mpc current`; [ "$s" ] && echo $s || echo Nothing to Play
-#AudioPlay   text_with_text   "Spotify" dbus-send --print-reply --dest=org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.mpris.MediaPlayer2.Player.PlayPause 2>&1 >/dev/null && qdbus-qt4 org.mpris.MediaPlayer2.spotify /org/mpris/MediaPlayer2 org.freedesktop.DBus.Properties.Get org.mpris.MediaPlayer2.Player PlaybackStatus
+
+# Spotify
+#AudioPrev    text_with_text   "Spotify" ~/.mmkeyosd/spotify.sh prev && ~/.mmkeyosd/spotify.sh info
+#AudioPlay    text_with_text   "Spotify" ~/.mmkeyosd/spotify.sh playpause && ~/.mmkeyosd/spotify.sh status
+#AudioPause   text_with_text   "Spotify" ~/.mmkeyosd/spotify.sh next && ~/.mmkeyosd/spotify.sh info
 
 WLAN   text_with_text "Wifi" [ "`cat /sys/class/rfkill/rfkill2/state`" -eq 1 ] && echo On || echo Off
 
